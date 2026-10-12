@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="mr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NextGen Premium Ludo 🎲</title>
+    <style>
+        /* 🎨 General Styling */
+        body { font-family: 'Segoe UI', sans-serif; background: radial-gradient(circle at top, #1e1e24, #000000); color: white; text-align: center; margin: 0; padding: 15px; overflow-x: hidden; }
+        h1 { color: #66fcf1; text-shadow: 0 0 15px rgba(102, 252, 241, 0.6); font-size: 2em; margin-bottom: 20px;}
+        .wallet-box { background: rgba(31, 40, 51, 0.8); border: 2px solid #66fcf1; padding: 12px 25px; border-radius: 30px; font-size: 1.3em; box-shadow: 0 0 15px rgba(102, 252, 241, 0.3); display: inline-block; margin-bottom: 20px; backdrop-filter: blur(10px); }
+        .timer { font-size: 2.5em; color: #ffeb3b; font-weight: bold; margin-bottom: 20px; text-shadow: 0 0 10px rgba(255, 235, 59, 0.5); }
+        .last-win-badge { background: linear-gradient(90deg, #d35400, #f39c12); color: white; padding: 10px 20px; border-radius: 20px; display: inline-block; font-size: 1.2em; font-weight: bold; box-shadow: 0 5px 15px rgba(243, 156, 18, 0.4); border: 2px solid #f1c40f; margin-bottom: 30px; }
+
+        /* 📱 Sidebar CSS */
+        .menu-btn { position: absolute; top: 20px; left: 20px; font-size: 1.2em; cursor: pointer; background: #1f2833; padding: 10px 15px; border-radius: 10px; border: 1px solid #45a29e; color: #66fcf1; z-index: 1000; box-shadow: 0 0 10px rgba(102, 252, 241, 0.3); }
+        .sidebar { position: fixed; top: 0; left: -300px; width: 280px; height: 100%; background: rgba(11, 12, 16, 0.95); backdrop-filter: blur(10px); border-right: 2px solid #66fcf1; transition: 0.4s ease; z-index: 3000; padding: 30px 20px; box-sizing: border-box; text-align: left; box-shadow: 5px 0 20px rgba(0,0,0,0.8); overflow-y: auto; }
+        .sidebar.active { left: 0; }
+        .close-btn { position: absolute; top: 15px; right: 20px; font-size: 1.5em; cursor: pointer; color: #e74c3c; }
+        .sidebar-detail { color: #c5c6c7; margin-bottom: 15px; border-bottom: 1px solid #1f2833; padding-bottom: 10px; font-size: 0.9em;}
+        
+        /* 🎲 Dice */
+        .scene { width: 120px; height: 120px; margin: 30px auto; perspective: 800px; }
+        .cube { width: 100%; height: 100%; position: relative; transform-style: preserve-3d; transform: translateZ(-60px) rotateX(-15deg) rotateY(15deg); transition: transform 3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .cube.rolling { animation: fastSpin 0.4s linear infinite; }
+        @keyframes fastSpin { 0% { transform: translateZ(-60px) rotateX(0deg) rotateY(0deg) rotateZ(0deg); } 100% { transform: translateZ(-60px) rotateX(360deg) rotateY(360deg) rotateZ(180deg); } }
+        .cube__face { position: absolute; width: 120px; height: 120px; background: linear-gradient(145deg, #ffffff, #e6e6e6); border-radius: 20px; box-shadow: inset -5px -5px 15px rgba(0,0,0,0.1), inset 5px 5px 15px rgba(255,255,255,0.8), 0 0 10px rgba(0,0,0,0.5); display: grid; padding: 18px; box-sizing: border-box; }
+        .dot { background: radial-gradient(circle at 30% 30%, #ff4b4b, #b30000); border-radius: 50%; box-shadow: inset -2px -2px 5px rgba(0,0,0,0.5), 0 2px 4px rgba(0,0,0,0.2); width: 22px; height: 22px; margin: auto; }
+        .cube__face--1 { transform: rotateY(0deg) translateZ(60px); grid-template-columns: 1fr; align-items: center; justify-items: center; } .cube__face--2 { transform: rotateY(90deg) translateZ(60px); grid-template-columns: 1fr 1fr; } .cube__face--2 .dot:nth-child(2) { align-self: end; } .cube__face--3 { transform: rotateY(180deg) translateZ(60px); grid-template-columns: 1fr 1fr 1fr; } .cube__face--3 .dot:nth-child(2) { align-self: center; } .cube__face--3 .dot:nth-child(3) { align-self: end; } .cube__face--4 { transform: rotateY(-90deg) translateZ(60px); grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; } .cube__face--5 { transform: rotateX(90deg) translateZ(60px); grid-template-columns: 1fr 1fr 1fr; grid-template-rows: 1fr 1fr 1fr; } .cube__face--5 .dot:nth-child(1), .cube__face--5 .dot:nth-child(5) { grid-column: span 3; } .cube__face--6 { transform: rotateX(-90deg) translateZ(60px); grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr 1fr; gap: 4px;}
+
+        /* Bet Buttons */
+        .bet-buttons { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; margin-top: 50px; width: 100%; max-width: 500px; margin-left: auto; margin-right: auto; }
+        .bet-btn { background: #1f2833; color: #66fcf1; border: 2px solid #45a29e; padding: 15px 0; font-size: 1.5em; border-radius: 15px; cursor: pointer; transition: 0.3s; flex: 1 1 calc(33% - 20px); min-width: 80px; }
+
+        /* ✨ Animated Modals */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(8px); display: flex; justify-content: center; align-items: center; opacity: 0; visibility: hidden; transition: 0.3s ease; z-index: 4000; }
+        .modal-overlay.active { opacity: 1; visibility: visible; }
+        .modal-box { background: linear-gradient(135deg, #1f2833, #0b0c10); border: 2px solid #66fcf1; border-radius: 20px; padding: 30px; width: 90%; max-width: 320px; transform: translateY(-50px) scale(0.9); transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .modal-overlay.active .modal-box { transform: translateY(0) scale(1); }
+        .modal-input { width: 100%; padding: 12px; border-radius: 8px; border: none; font-size: 1em; text-align: center; margin-bottom: 20px; outline: none; box-sizing: border-box; font-weight: bold;}
+        .modal-buttons { display: flex; justify-content: space-between; gap: 10px;}
+        .btn-cancel { flex: 1; background: transparent; color: #e74c3c; border: 2px solid #e74c3c; padding: 10px; border-radius: 8px; cursor: pointer; font-weight: bold; }
+        .btn-confirm { flex: 1; background: #27ae60; color: white; border: 2px solid #27ae60; padding: 10px; border-radius: 8px; cursor: pointer; font-weight: bold; }
+
+        /* 💬 CHAT MODAL */
+        .chat-box-modal { padding: 0; display: flex; flex-direction: column; height: 400px; border: 2px solid #66fcf1;}
+        .chat-header { background: #0b0c10; color: #66fcf1; padding: 15px; text-align: center; border-top-left-radius: 18px; border-top-right-radius: 18px; font-weight: bold; position: relative;}
+        .chat-close { position: absolute; right: 15px; top: 15px; color: #e74c3c; cursor: pointer; }
+        .chat-messages { flex: 1; overflow-y: auto; padding: 15px; font-size: 0.95em; text-align: left; color: #c5c6c7; }
+        .chat-message { margin-bottom: 10px; border-bottom: 1px solid #2c3e50; padding-bottom: 5px; }
+        .chat-user { color: #66fcf1; font-weight: bold; }
+        .chat-input-box { display: flex; border-top: 1px solid #45a29e; }
+        .chat-input { flex: 1; background: transparent; border: none; color: white; padding: 15px; outline: none; }
+        .chat-send-btn { background: #45a29e; color: #0b0c10; border: none; padding: 10px 20px; cursor: pointer; font-weight: bold; border-bottom-right-radius: 18px; }
+    </style>
+</head>
+<body>
+    {% csrf_token %}
+    
+    <!-- ☰ मेनू बटण -->
+    <div class="menu-btn" onclick="document.getElementById('sidebar').classList.add('active')">☰ प्रोफाईल</div>
+
+    <!-- 👤 प्रोफाईल साईडबार -->
+    <div class="sidebar" id="sidebar">
+        <div class="close-btn" onclick="document.getElementById('sidebar').classList.remove('active')">✖</div>
+        
+        <h2 style="color: #66fcf1; text-align: center;">{{ request.user.username|default:"Customer" }}</h2>
+        <div class="sidebar-detail">📞 <b>मोबाईल:</b> <br> {{ request.user.phone_number|default:"Not Provided" }}</div>
+        <div class="sidebar-detail" style="text-align:center; padding:15px; background:#1f2833; border-radius:10px;">
+            💰 <b>बॅलन्स:</b><br><span style="color: #27ae60; font-size: 1.5em; font-weight: bold;">₹ <span id="sidebar-balance">{{ request.user.wallet_balance|default:"0.00" }}</span></span>
+        </div>
+
+        <div style="display: flex; gap: 10px; margin-top: 15px;">
+            <button style="flex: 1; background: #27ae60; color: white; border: none; padding: 10px; border-radius: 8px; font-weight: bold;" onclick="openModal('addMoneyModal')">➕ Add Money</button>
+            <button style="flex: 1; background: #e74c3c; color: white; border: none; padding: 10px; border-radius: 8px; font-weight: bold;" onclick="openModal('withdrawModal')">💸 Withdraw</button>
+        </div>
+
+        <div style="margin-top: 15px; text-align: center;">
+            <button style="width: 100%; background: transparent; color: #f39c12; border: 2px solid #f39c12; padding: 10px; border-radius: 8px; font-weight: bold;" onclick="openModal('kycModal')">🛡️ KYC Verification</button>
+        </div>
+
+        <!-- 💬 Chat Button in Sidebar -->
+        <div style="margin-top: 15px; text-align: center;">
+            <button style="width: 100%; background: #0b0c10; color: #66fcf1; border: 2px solid #66fcf1; padding: 10px; border-radius: 8px; font-weight: bold; cursor:pointer;" onclick="openChatModal()">💬 Live Chat उघडा</button>
+        </div>
+
+        <div style="margin-top: 15px; text-align: center;">
+            <a href="{% url 'history' %}" style="display: block; width: 100%; box-sizing: border-box; background: transparent; color: #45a29e; border: 2px solid #45a29e; padding: 10px; border-radius: 8px; font-weight: bold; text-decoration: none;">📜 My History (माझा रेकॉर्ड)</a>
+        </div>
+
+        <div style="margin-top: 30px; text-align: center;">
+            <a href="{% url 'logout' %}" style="color: #e74c3c; text-decoration: none; font-weight: bold;">🔴 अकाउंट लॉगआउट करा</a>
+        </div>
+    </div>
+    
+    <br><h1>🚀 NextGen Ludo Arena</h1>
+    <div class="wallet-box">💰 वॉलेट: <span style="color:#27ae60; font-weight:bold;">₹ <span id="wallet-balance">{{ request.user.wallet_balance|default:"0.00" }}</span></span></div><br>
+
+    <div class="last-win-badge">मागील विजेता: <span>🎲 {{ last_win|default:"-" }}</span></div>
+    <div style="color: #c5c6c7; margin-bottom: 5px;">⏳ पुढील रिझल्ट:</div>
+    <div class="timer" id="countdown">01:00:00</div>
+
+    <!-- 👑 सिक्रेट ॲडमिन बटण (फक्त सुपरयुझरला दिसेल) -->
+    {% if request.user.is_superuser %}
+    <div style="margin-bottom: 20px;">
+        <button onclick="declareResultAuto()" style="background: #8e44ad; color: white; border: 2px solid #9b59b6; padding: 10px 20px; border-radius: 10px; cursor: pointer; font-weight: bold; font-size: 1.1em; box-shadow: 0 0 15px rgba(142, 68, 173, 0.5); transition: 0.3s;">
+            👑 Admin: Force Result Now
+        </button>
+    </div>
+    {% endif %}
+
+    <!-- 🎲 Dice -->
+    <div class="scene">
+        <div class="cube" id="dice">
+            <div class="cube__face cube__face--1"><div class="dot"></div></div>
+            <div class="cube__face cube__face--2"><div class="dot"></div><div class="dot"></div></div>
+            <div class="cube__face cube__face--3"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+            <div class="cube__face cube__face--4"><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+            <div class="cube__face cube__face--5"><div class="dot" style="grid-area: 1/1;"></div><div class="dot" style="grid-area: 1/3;"></div><div class="dot" style="grid-area: 2/2;"></div><div class="dot" style="grid-area: 3/1;"></div><div class="dot" style="grid-area: 3/3;"></div></div>
+            <div class="cube__face cube__face--6"><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+        </div>
+    </div>
+
+    <!-- 🔘 Bet Buttons -->
+    <div class="bet-buttons">
+        <button class="bet-btn" onclick="openBetModal(1)">1</button> <button class="bet-btn" onclick="openBetModal(2)">2</button> <button class="bet-btn" onclick="openBetModal(3)">3</button>
+        <button class="bet-btn" onclick="openBetModal(4)">4</button> <button class="bet-btn" onclick="openBetModal(5)">5</button> <button class="bet-btn" onclick="openBetModal(6)">6</button>
+    </div>
+
+    <!-- 🎯 तुमच्या चालू बेट्स -->
+    <div style="background: rgba(31, 40, 51, 0.8); border: 2px solid #f39c12; padding: 15px; border-radius: 15px; margin: 30px auto; max-width: 500px; box-shadow: 0 0 15px rgba(243, 156, 18, 0.2);">
+        <h3 style="color: #f39c12; margin-top: 0;">🎯 तुमच्या चालू बेट्स</h3>
+        <div id="active-bets-container" style="display: flex; flex-wrap: wrap; justify-content: center; gap: 10px;">
+            {% for bet in active_bets %}
+                <div style="background: #0b0c10; color: #66fcf1; padding: 10px 15px; border-radius: 10px; border: 1px solid #45a29e;">
+                    नंबर: <b style="font-size: 1.3em; color: #ffeb3b;">{{ bet.chosen_number }}</b> <br>
+                    ₹ {{ bet.bet_amount }}
+                </div>
+            {% empty %}
+                <span style="color: #c5c6c7; font-size: 0.9em;" id="no-bets-msg">तुम्ही अजून कोणतीही बेट लावलेली नाही.</span>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- ================== MODALS ================== -->
+    <!-- 🎲 Bet Modal -->
+    <div id="betModal" class="modal-overlay">
+        <div class="modal-box">
+            <h3 style="color:#66fcf1;">नंबर <span id="modal-number"></span> वर बेट</h3>
+            <input type="number" id="bet-amount" class="modal-input" placeholder="रक्कम टाका (₹)">
+            <div class="modal-buttons"><button class="btn-cancel" onclick="closeModal('betModal')">रद्द करा</button> <button class="btn-confirm" onclick="submitBet()">निश्चित करा</button></div>
+        </div>
+    </div>
+
+    <!-- 💳 Add Money (Updated with QR and UTR) -->
+    <div id="addMoneyModal" class="modal-overlay">
+        <div class="modal-box" style="border-color:#27ae60;">
+            <h3 style="color: #27ae60; margin-bottom: 5px;">➕ पैसे ॲड करा</h3>
+            
+            <!-- QR Code Section -->
+            <div style="background: white; padding: 10px; border-radius: 10px; display: inline-block; margin-bottom: 15px;">
+                <!-- इथे तुम्ही भविष्यात तुमच्या खऱ्या QR कोडची लिंक टाकू शकता -->
+                <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=upi://pay?pa=yournumber@upi&pn=NextGenLudo" alt="QR Code" style="width: 150px; height: 150px;">
+            </div>
+            <p style="color: #c5c6c7; font-size: 0.85em; margin-top: 0;">स्कॅन करून पेमेंट करा आणि खाली UTR नंबर टाका.</p>
+            
+            <input type="number" id="deposit-amount" class="modal-input" placeholder="रक्कम टाका (₹)" style="margin-bottom: 10px;">
+            <input type="text" id="deposit-utr" class="modal-input" placeholder="१२ अंकी UTR नंबर टाका" style="border: 1px solid #27ae60;">
+            
+            <div class="modal-buttons">
+                <button class="btn-cancel" onclick="closeModal('addMoneyModal')">रद्द करा</button> 
+                <button class="btn-confirm" onclick="submitDeposit()" style="background: #27ae60;">रिक्वेस्ट पाठवा</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 💸 Withdraw (Updated with UPI ID) -->
+    <div id="withdrawModal" class="modal-overlay">
+        <div class="modal-box" style="border-color:#e74c3c;">
+            <h3 style="color: #e74c3c; margin-bottom: 5px;">💸 पैसे काढा</h3>
+            <p style="color: #c5c6c7; font-size: 0.85em;">रात्री १२ वाजता पैसे तुमच्या खात्यात जमा होतील.</p>
+            
+            <input type="number" id="withdraw-amount" class="modal-input" placeholder="रक्कम टाका (₹)" style="margin-bottom: 10px;">
+            <input type="text" id="withdraw-upi" class="modal-input" placeholder="तुमचा UPI ID किंवा नंबर टाका" style="border: 1px solid #e74c3c;">
+            
+            <div class="modal-buttons">
+                <button class="btn-cancel" onclick="closeModal('withdrawModal')">रद्द करा</button> 
+                <button class="btn-confirm" onclick="submitWithdraw()" style="background: #e74c3c;">रिक्वेस्ट पाठवा</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 🛡️ KYC -->
+    <div id="kycModal" class="modal-overlay">
+        <div class="modal-box" style="border-color:#f39c12;">
+            <h3 style="color: #f39c12;">🛡️ KYC Verification</h3>
+            <input type="text" id="aadhar-no" class="modal-input" placeholder="आधार कार्ड (12 Digit)">
+            <input type="text" id="pan-no" class="modal-input" placeholder="पॅन कार्ड (10 Char)">
+            <div class="modal-buttons"><button class="btn-cancel" onclick="closeModal('kycModal')">रद्द करा</button> <button class="btn-confirm" onclick="submitKYC()" style="background: #f39c12;">सबमिट करा</button></div>
+        </div>
+    </div>
+
+    <!-- 💬 LIVE CHAT MODAL -->
+    <div id="chatModal" class="modal-overlay">
+        <div class="modal-box chat-box-modal">
+            <div class="chat-header">
+                🟢 Live Chat <span class="chat-close" onclick="closeModal('chatModal')">✖</span>
+            </div>
+            <div class="chat-messages" id="chat-box"></div>
+            <div class="chat-input-box">
+                <input type="text" id="chat-input" class="chat-input" placeholder="मेसेज टाईप करा..." onkeypress="handleKeyPress(event)">
+                <button class="chat-send-btn" onclick="sendMessage()">Send</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================== JAVASCRIPT ================== -->
+    <script>
+        const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        const dice = document.getElementById('dice');
+        let selectedNumber = 0;
+
+        function openModal(id) { document.getElementById(id).classList.add('active'); document.getElementById('sidebar').classList.remove('active'); }
+        function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+        
+        function openBetModal(number) { selectedNumber = number; document.getElementById('modal-number').innerText = number; document.getElementById('bet-amount').value = ''; openModal('betModal'); }
+        function openChatModal() { openModal('chatModal'); fetchMessages(); }
+
+        // 🟢 SMART BET API
+        function submitBet() {
+            let amount = document.getElementById('bet-amount').value;
+            let btn = event.target; 
+
+            if(amount > 0) {
+                btn.innerText = "थांबा..."; 
+                btn.disabled = true;
+
+                fetch('/place-bet/', { 
+                    method: 'POST', 
+                    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrftoken }, 
+                    body: JSON.stringify({ 'number': selectedNumber, 'amount': amount }) 
+                })
+                .then(async res => {
+                    const text = await res.text();
+                    try {
+                        return JSON.parse(text);
+                    } catch (err) {
+                        throw new Error("तुमचे Session Expire झाले आहे (Logout) किंवा सर्व्हर एरर: " + text.substring(0, 50));
+                    }
+                })
+                .then(data => {
+                    closeModal('betModal');
+                    if(data.status === 'success') {
+                        document.getElementById('wallet-balance').innerText = data.new_balance;
+                        document.getElementById('sidebar-balance').innerText = data.new_balance;
+                        
+                        let betsContainer = document.getElementById('active-bets-container');
+                        if (betsContainer) {
+                            let noBetsMsg = document.getElementById('no-bets-msg');
+                            if(noBetsMsg) noBetsMsg.style.display = 'none';
+                            
+                            let newBetHTML = `<div style="background: #0b0c10; color: #66fcf1; padding: 10px 15px; border-radius: 10px; border: 1px solid #45a29e;">
+                                    नंबर: <b style="font-size: 1.3em; color: #ffeb3b;">${selectedNumber}</b> <br>
+                                    ₹ ${amount}
+                                </div>`;
+                            betsContainer.innerHTML += newBetHTML;
+                        }
+                        alert("✅ " + data.message);
+                    } else { 
+                        alert("❌ " + data.message); 
+                    }
+                    btn.innerText = "निश्चित करा";
+                    btn.disabled = false;
+                })
+                .catch(error => {
+                    alert("❌ अचूक एरर: " + error.message);
+                    console.log(error);
+                    btn.innerText = "निश्चित करा";
+                    btn.disabled = false;
+                });
+            } else { 
+                alert('कृपया योग्य रक्कम टाका.'); 
+            }
+        }
+
+        // 💳 Deposit API
+        function submitDeposit() {
+            let amount = document.getElementById('deposit-amount').value;
+            let utr = document.getElementById('deposit-utr').value;
+            
+            if(amount > 0 && utr.length >= 8) {
+                fetch('/submit-transaction/', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrftoken }, body: JSON.stringify({ 'amount': amount, 'type': 'ADD', 'utr': utr }) })
+                .then(res => res.json()).then(data => {
+                    alert(data.message); closeModal('addMoneyModal'); 
+                    document.getElementById('deposit-amount').value = ''; document.getElementById('deposit-utr').value = '';
+                });
+            } else { alert("कृपया योग्य रक्कम आणि UTR नंबर टाका."); }
+        }
+
+        // 💸 Withdraw API
+        function submitWithdraw() {
+            let amount = document.getElementById('withdraw-amount').value;
+            let upi = document.getElementById('withdraw-upi').value;
+            
+            if(amount > 0 && upi.length >= 5) {
+                fetch('/submit-transaction/', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrftoken }, body: JSON.stringify({ 'amount': amount, 'type': 'WITHDRAW', 'upi': upi }) })
+                .then(res => res.json()).then(data => {
+                    alert(data.message); closeModal('withdrawModal'); 
+                    document.getElementById('withdraw-amount').value = ''; document.getElementById('withdraw-upi').value = '';
+                });
+            } else { alert("कृपया योग्य रक्कम आणि तुमचा UPI ID टाका."); }
+        }
+
+        // KYC API
+        function submitKYC() {
+            let aadhar = document.getElementById('aadhar-no').value;
+            let pan = document.getElementById('pan-no').value;
+            if(aadhar.length === 12 && pan.length >= 10) {
+                fetch('/submit-kyc/', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrftoken }, body: JSON.stringify({ 'aadhar': aadhar, 'pan': pan }) })
+                .then(res => res.json()).then(data => { alert(data.message); closeModal('kycModal'); });
+            } else { alert("कृपया योग्य 12 अंकी आधार आणि 10 अंकी पॅन नंबर टाका."); }
+        }
+
+        // Auto Timer (१ तास = ३६०० सेकंद)
+        let timeInSeconds = 3600; 
+        let timer = setInterval(function() {
+            let hours = Math.floor(timeInSeconds / 3600); let minutes = Math.floor((timeInSeconds % 3600) / 60); let seconds = timeInSeconds % 60;
+            document.getElementById("countdown").innerText = (hours < 10 ? "0" : "") + hours + ":" + (minutes < 10 ? "0" : "") + minutes + ":" + (seconds < 10 ? "0" : "") + seconds;
+            if(timeInSeconds > 0) { timeInSeconds--; } else { clearInterval(timer); declareResultAuto(); }
+        }, 1000);
+
+        function declareResultAuto() {
+            dice.classList.add('rolling'); 
+            fetch('/auto-result/', { method: 'POST', headers: { 'X-CSRFToken': csrftoken } })
+            .then(res => res.json()).then(data => {
+                setTimeout(() => {
+                    dice.classList.remove('rolling');
+                    let xRot = 1440, yRot = 1440; let win = data.winning_number;
+                    if(win === 1) { xRot += 0; yRot += 0; } else if(win === 2) { xRot += 0; yRot += -90; } else if(win === 3) { xRot += 0; yRot += -180; } else if(win === 4) { xRot += 0; yRot += 90; } else if(win === 5) { xRot += -90; yRot += 0; } else if(win === 6) { xRot += 90; yRot += 0; }
+                    dice.style.transform = `translateZ(-60px) rotateX(${xRot}deg) rotateY(${yRot}deg)`;
+                    setTimeout(() => { window.location.reload(); }, 3000);
+                }, 2000); 
+            });
+        }
+
+        // Live Chat Logic
+        let chatInterval = setInterval(fetchMessages, 2000);
+        function fetchMessages() {
+            if(document.getElementById('chatModal').classList.contains('active')) {
+                fetch('/get-messages/')
+                .then(res => res.json()).then(data => {
+                    const chatBox = document.getElementById('chat-box');
+                    let chatHTML = '';
+                    data.messages.forEach(msg => { chatHTML += `<div class="chat-message"><span class="chat-user">${msg.user}:</span> ${msg.message}</div>`; });
+                    let isScrolledToBottom = chatBox.scrollHeight - chatBox.clientHeight <= chatBox.scrollTop + 1;
+                    chatBox.innerHTML = chatHTML;
+                    if (isScrolledToBottom) chatBox.scrollTop = chatBox.scrollHeight;
+                });
+            }
+        }
+
+        function sendMessage() {
+            const input = document.getElementById('chat-input'); const message = input.value.trim();
+            if (message) {
+                fetch('/send-message/', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrftoken }, body: JSON.stringify({ 'message': message }) })
+                .then(() => { input.value = ''; fetchMessages(); setTimeout(() => { document.getElementById('chat-box').scrollTop = document.getElementById('chat-box').scrollHeight; }, 200); });
+            }
+        }
+        function handleKeyPress(e) { if(e.key === 'Enter') sendMessage(); }
+    </script>
+</body>
+</html>
